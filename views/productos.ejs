@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= Title %></title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Amazone</h1>
+        <nav>
+            <ul>
+                <% if (user) { %>
+                    <li><a href="/">Pagina principal</a></li>
+                    <li><a href="/blogs/crear">Crear Blog</a></li>
+                    <li><a href="/productos">Productos</a></li>
+                    <li><a href="/logout">Cerrar Sesión</a></li>
+                    <li><a href="/usuarios">Usuarios</a></li>
+                <% } else { %>
+                    <li><a href="/">Pagina principal</a></li>
+                    <li><a href="/login">Iniciar Sesión</a></li>
+                    <li><a href="/sign-up">Registrarse</a></li>
+                <% } %>
+            </ul>
+        </nav>
+    </header>
+    <h1><%= Title %></h1>
+
+    <% if (products && products.length > 0) { %>
+        <div class="products">
+        <% products.forEach(product => { %>
+            <div class="product">
+                <h3><%= product.name %></h3>
+                <img src="<%= product.image %>" alt="<%= product.name %>" width="200" />
+                <p><%= product.description %></p>
+                <p><strong>Precio: €<%= product.price %></strong></p>
+
+                <!-- Botón de compra PayPal -->
+
+                <div id="paypal-button-container-<%= product._id %>"></div>
+            </div>
+        <% }) %>
+        </div>
+    <% } else { %>
+        <p>No hay productos disponibles.</p>
+    <% } %>
+
+    <footer>
+        <p>@2025 Germán Luís Campaña</p>
+    </footer>
+
+    <!--script de PayPal -->
+
+    <script src="https://www.paypal.com/sdk/js?client-id=AbctpeQundTDw1YxlNXWLs098ZwUmv8VqHUTg0oEqqGeVTW_J7I4FuALELwQA7th6wlGQolGF62zkCtO&currency=EUR"></script>
+
+    <script>
+        <% products.forEach(product => { %>
+            paypal.Buttons({
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: {
+                                value: '<%= product.price %>'
+                            },
+                            description: '<%= product.name %>',
+                        }]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(function(details) {
+                        alert('Pago realizado con éxito: ' + details.payer.name.given_name);
+
+                        //confirmación al backend
+
+                        fetch('/api/paypal/success', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ orderID: data.orderID })
+                        }).then(response => response.json())
+                        .then(data => {
+                            console.log('Pago procesado en el backend:', data);
+                        }).catch(error => {
+                            console.error('Error al enviar al backend:', error);
+                        });
+                    });
+                }
+
+            }).render('#paypal-button-container-<%= product._id %>');
+        <% }) %>
+    </script>
+</body>
+</html>

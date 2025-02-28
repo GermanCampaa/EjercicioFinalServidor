@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title><%= Title %></title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Amazone</h1>
+        <nav>
+            <ul>
+            <% if (user) { %> <!-- Si el usuario está autenticado-->
+
+                <li><a href="/">Pagina principal</a></li>
+                <li><a href="/blogs/crear">Crear Blog</a></li>
+                <li><a href="/productos">Productos</a></li>
+                <li><a href="/logout">Cerrar Sesión</a></li>
+                <li><a href="/usuarios">Usuarios</a></li> 
+
+            <% } else { %> <!-- Si el usuario no está autenticado-->
+
+                <li><a href="/">Pagina principal</a></li>
+                <li><a href="/login">Iniciar Sesión</a></li>
+                <li><a href="/sign-up">Registrarse</a></li>
+            <% } %>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Editar Blog</h1>
+            <form action="/blogs/<%= blog._id %>?_method=PUT" method="POST">
+                <label for="title">Título</label>
+                <input type="text" id="title" name="title" value="<%= blog.title %>" required>
+                
+                <label for="snippet">Resumen</label>
+                <input type="text" id="snippet" name="snippet" value="<%= blog.snippet %>" required>
+                
+                <label for="body">Cuerpo del blog</label>
+                <textarea id="body" name="body" required><%= blog.body %></textarea>
+                
+                <button type="submit">Actualizar Blog</button>
+            </form>
+
+            <a href="/blogs/<%= blog._id %>">Cancelar</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>@2025 Germán Luís Campaña</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title><%= Title %></title>
+    <link rel="stylesheet" href="/styles.css">
+    
+</head>
+<body>
+
+    <header>
+        <h1>Amazone</h1>
+        <nav>
+            <ul>
+                <% if (user) { %>
+
+                    <li><a href="/">Inicio</a></li>
+                    <li><a href="/blogs/crear">Crear Blog</a></li>
+                    <li><a href="/productos">Productos</a></li>
+                    <li><a href="/logout">Cerrar Sesión</a></li>
+                    <li><a href="/usuarios">Usuarios</a></li> 
+
+                <% } else { %>
+                    
+                    <li><a href="/">Inicio</a></li>
+                    <li><a href="/login">Iniciar Sesión</a></li>
+                    <li><a href="/sign-up">Registrarse</a></li>
+                <% } %>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Blogs:</h1>
+        <section class="main-blog">
+            <% blogs.forEach(blog => { %>
+                <div class="blog">
+                    <h2><%= blog.title %></h2>
+                    <p><%= blog.snippet %></p>
+                    <a href="/blogs/<%= blog._id %>">Ver más</a>
+                    
+                    <% if (user) { %>
+                        <div class="main-botones">
+                            <a href="/blogs/<%= blog._id %>/editar">Editar</a>
+                            <form action="/blogs/<%= blog._id %>?_method=DELETE" method="POST">
+                                <button type="submit">Eliminar</button>
+                            </form>
+                        </div>          
+                    <% } %>
+                </div>
+            <% }); %>
+        </section>   
+    </main>
+
+    <footer>
+        <p>@2025 Germán Luís Campaña</p>
+    </footer>
+
+</body>
+</html>
