@@ -9,16 +9,17 @@
 <body>
 
     <header>
-        <h1>Amazone</h1>
+        <h1>FICC</h1>
         <nav>
             <ul>
                 <% if (user) { %>
 
                     <li><a href="/">Inicio</a></li>
-                    <li><a href="/blogs/crear">Crear Blog</a></li>
-                    <li><a href="/productos">Productos</a></li>
+                    <li><a href="/blogs/crear">Crear Cartelera</a></li>
+                    <li><a href="/peliculas">Películas</a></li>
                     <li><a href="/logout">Cerrar Sesión</a></li>
                     <li><a href="/usuarios">Usuarios</a></li> 
+
 
                 <% } else { %>
                     
@@ -31,7 +32,7 @@
     </header>
 
     <main>
-        <h1>Blogs:</h1>
+        <h1>Carteleras:</h1>
         <section class="main-blog">
             <% blogs.forEach(blog => { %>
                 <div class="blog">

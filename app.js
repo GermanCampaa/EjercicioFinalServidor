@@ -10,9 +10,8 @@ const bcrypt = require('bcrypt');
 const flash = require('connect-flash');
 const Blog = require('./models/blog');
 const User = require('./models/user');
-const Product = require('./models/product');
+const traerPeliculas = require('./models/apiPeliculas');
 const dotenv = require('dotenv');
-const paypal = require('@paypal/checkout-server-sdk');
 const methodOverride = require('method-override');
 
 dotenv.config();
@@ -28,7 +27,6 @@ mongoose.connect(db)
   })
   .catch((error) => console.log('❌ Error al conectar con MongoDB:', error));
 
-
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
@@ -42,7 +40,6 @@ passport.use(new LocalStrategy(async (username, password, done) => {
   } catch (error) {
     return done(error);
   }
-
 }));
 
 passport.serializeUser((user, done) => done(null, user.id));
@@ -56,22 +53,11 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.use(session({
-
   secret: require('crypto').randomBytes(64).toString('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 1000 * 60 * 30 }
-  
 }));
-
-//PayPal (credenciales desde el archivo .env)
-const paypalClient = new paypal.core.PayPalHttpClient(new paypal.core.SandboxEnvironment(
-    process.env.PAYPAL_CLIENT_ID,  
-    process.env.PAYPAL_SECRET
-
-));
-
-// Esto permite usar ?_method=DELETE o ?_method=PUT
 
 app.use(methodOverride('_method'));
 app.use(passport.initialize());
@@ -79,12 +65,9 @@ app.use(passport.session());
 app.use(flash());
 
 app.use((req, res, next) => {
-    res.locals.user = req.user || null;
-
-    // Esto pasa el mensaje de error a las vistas
-
-    res.locals.message = req.flash('error');  
-    next();
+  res.locals.user = req.user || null;
+  res.locals.message = req.flash('error');
+  next();
 });
 
 app.use(morgan('dev'));
@@ -92,16 +75,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
-// autenticación
-
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) {
     return next();
   }
   res.redirect('/login');
 }
-
-// Cargar imágenes
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -116,22 +95,22 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Middleware para hacer el usuario disponible en todas las vistas
-
-app.use((req, res, next) => {
-    res.locals.user = req.user || null; //usuario está autenticado
-    next();
-});
-
-
-// Rutas
-
 app.get('/', async (req, res) => {
   try {
     const blogs = await Blog.find().sort({ createdAt: -1 });
     res.render('main', { Title: 'INICIO', blogs });
   } catch (error) {
     console.log(error);
+  }
+});
+
+app.get('/peliculas', async (req, res) => {
+  try {
+    const peliculas = await traerPeliculas();
+    res.render('peliculas', { Title: 'Catálogo de Películas', peliculas });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send('Error al cargar películas');
   }
 });
 
@@ -161,106 +140,66 @@ app.get('/blogs/:id', async (req, res) => {
   }
 });
 
-// Ruta para mostrar el formulario de edición
-
 app.get('/blogs/:id/editar', (req, res) => {
-    const { id } = req.params;
-  
-    // Buscar el blog por su ID
-
-    Blog.findById(id)
-      .then(blog => {
-        if (!blog) {
-          return res.status(404).send('Blog no encontrado');
-        }
-        res.render('editar', { blog, Title: 'Editar Blog' });
-      })
-      .catch(error => {
-        console.log(error);
-        res.status(500).send('Error al cargar el blog');
-      });
-  });
-  
-// Ruta para eliminar un blog
-
-
-app.delete('/blogs/:id', (req, res) => {
-    const { id } = req.params;  
-    
-  
-  
-    // Verificar si el ID es válido
-
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(404).send('Blog no encontrado');
-    }
-  
-    // Eliminar el blog de la base de datos
-
-    Blog.findByIdAndDelete(id)
-      .then(result => {
-        if (!result) {
-          return res.status(404).send('Blog no encontrado');
-        }
-        res.redirect('/'); // Redirigir al inicio después de eliminar el blog
-      })
-      .catch(error => {
-        console.log(error);
-        res.status(500).send('Error al eliminar el blog');
-      });
-  });
-  
-// actualizar un blog
-
-app.put('/blogs/:id', (req, res) => {
-    const { id } = req.params;
-    const { title, snippet, body } = req.body;
-  
-    // Verificar si el ID es válido
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(404).send('Blog no encontrado');
-    }
-  
-    // Actualizar el blog con los nuevos datos
-
-    Blog.findByIdAndUpdate(id, { title, snippet, body }, { new: true })
-      .then((result) => {
-        if (!result) {
-          return res.status(404).send('Blog no encontrado');
-        }
-        res.redirect('/');
-        
-      })
-      .catch((error) => {
-        console.log(error);
-        res.status(500).send('Error al actualizar el blog');
-      });
-  });
-
-// Ruta para ver los productos
-
-app.get('/productos', async (req, res) => {
-  try {
-    const products = await Product.find(); // Obtener todos los productos
-    res.render('productos', { Title: 'Productos', products });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send('Error al cargar los productos');
-  }
+  const { id } = req.params;
+  Blog.findById(id)
+    .then(blog => {
+      if (!blog) {
+        return res.status(404).send('Blog no encontrado');
+      }
+      res.render('editar', { blog, Title: 'Editar Blog' });
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).send('Error al cargar el blog');
+    });
 });
 
-// Rutas de autenticación
+app.delete('/blogs/:id', (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).send('Blog no encontrado');
+  }
+  Blog.findByIdAndDelete(id)
+    .then(result => {
+      if (!result) {
+        return res.status(404).send('Blog no encontrado');
+      }
+      res.redirect('/');
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).send('Error al eliminar el blog');
+    });
+});
+
+app.put('/blogs/:id', (req, res) => {
+  const { id } = req.params;
+  const { title, snippet, body } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).send('Blog no encontrado');
+  }
+  Blog.findByIdAndUpdate(id, { title, snippet, body }, { new: true })
+    .then(result => {
+      if (!result) {
+        return res.status(404).send('Blog no encontrado');
+      }
+      res.redirect('/');
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).send('Error al actualizar el blog');
+    });
+});
 
 app.get('/login', (req, res) => {
   res.render('login', { Title: 'Login' });
 });
 
 app.post('/login', passport.authenticate('local', {
-    successRedirect: '/usuarios',
-    failureRedirect: '/login',
-    failureFlash: true 
+  successRedirect: '/usuarios',
+  failureRedirect: '/login',
+  failureFlash: true
 }));
 
 app.get('/sign-up', (req, res) => {
@@ -285,21 +224,15 @@ app.post('/sign-up', async (req, res) => {
   }
 });
 
-
-// Ruta para ver todos los usuarios (solo si el usuario está autenticado)
-
 app.get('/usuarios', ensureAuthenticated, async (req, res) => {
-    try {
-      const users = await User.find(); //  usuarios de la base de datos
-
-      res.render('usuarios', { Title: 'Usuarios Registrados', users }); // Renderizar la vista con los usuarios
-    } catch (error) {
-      console.log(error);
-      res.status(500).send('Error al cargar los usuarios');
-    }
-  });
-
-// Ruta de logout
+  try {
+    const users = await User.find();
+    res.render('usuarios', { Title: 'Usuarios Registrados', users });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send('Error al cargar los usuarios');
+  }
+});
 
 app.get('/logout', (req, res) => {
   req.logout(error => {
@@ -311,9 +244,6 @@ app.get('/logout', (req, res) => {
   });
 });
 
-// 404
-
 app.use((req, res) => {
   res.status(404).render('404', { Title: 'Error 404' });
 });
-

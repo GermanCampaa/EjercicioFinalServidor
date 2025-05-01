@@ -7,15 +7,14 @@
 </head>
 <body>
     <header>
-        <h1>Amazone</h1>
+        <h1>FICC</h1>
         <nav>
             <ul>
                 
             <% if (user) { %> <!-- Si el usuario está autenticado-->
 
                 <li><a href="/">Pagina principal</a></li>
-                <li><a href="/blogs/crear">Crear Blog</a></li>
-                <li><a href="/productos">Productos</a></li>
+                <li><a href="/blogs/crear">Crear cartelera</a></li>
                 <li><a href="/logout">Cerrar Sesión</a></li>
                 <li><a href="/usuarios">Usuarios</a></li> 
 
@@ -31,7 +30,7 @@
 
     <main>
         <div class="container">
-            <h1>Crear un nuevo blog</h1>
+            <h1>Crear una nueva cartelera</h1>
             <form action="/blogs/crear" method="POST" enctype="multipart/form-data">
                 <label for="title">Título</label>
                 <input type="text" name="title" required>
@@ -39,13 +38,13 @@
                 <label for="snippet">Resumen</label>
                 <input type="text" name="snippet" required>
                 
-                <label for="body">Cuerpo del blog</label>
+                <label for="body">Descripción</label>
                 <textarea name="body" required></textarea>
                 
                 <label for="image">Imagen</label>
                 <input type="file" name="image">
                 
-                <button type="submit">Crear blog</button>
+                <button type="submit">Crear cartelera</button>
             </form>
         </div>
     </main>

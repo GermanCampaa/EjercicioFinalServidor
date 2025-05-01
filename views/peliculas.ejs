@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title><%= Title %></title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header>
+        <h1>FICC</h1>
+        <nav>
+            <ul>
+            <% if (user) { %> <!-- Usuario autenticado -->
+                <li><a href="/">Pagina principal</a></li>
+                <li><a href="/blogs/crear">Crear cartelera</a></li>
+                <li><a href="/peliculas">Películas</a></li>
+                <li><a href="/usuarios">Usuarios</a></li>
+                <li><a href="/logout">Cerrar Sesión</a></li>
+            <% } else { %> <!-- Usuario no autenticado -->
+                <li><a href="/">Pagina principal</a></li>
+                <li><a href="/login">Iniciar Sesión</a></li>
+                <li><a href="/sign-up">Registrarse</a></li>
+            <% } %>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Catálogo de Películas</h1>
+
+            <div class="peliculas-grid">
+                <% peliculas.forEach(pelicula => { %>
+                    <div class="pelicula-card">
+                        <h2><%= pelicula.title %></h2>
+                        <% if (pelicula.poster_path) { %>
+                            <img src="https://image.tmdb.org/t/p/w300<%= pelicula.poster_path %>" alt="<%= pelicula.title %>">
+                        <% } else { %>
+                            <p>Imagen no disponible</p>
+                        <% } %>
+                        <p><%= pelicula.overview %></p>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>@2025 Germán Luís Campaña</p>
+    </footer>
+</body>
+</html>
+
+<style>
+.peliculas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+.pelicula-card {
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.pelicula-card img {
+  width: 100%;
+  border-radius: 10px;
+}
+</style>
+
